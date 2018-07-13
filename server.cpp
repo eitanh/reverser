@@ -1,62 +1,55 @@
+#include <cpprest/json.h>
 #include <cpprest/http_listener.h>
-#include <functional>
+#include <cpprest/uri.h>
+#include <cpprest/asyncrt_utils.h>
+#include <cpprest/json.h>
+#include <cpprest/filestream.h>
+#include <cpprest/containerstream.h>
+#include <cpprest/producerconsumerstream.h>
+#include <pplx/threadpool.h>
+class handler {
+public:
+  handler(web::http::uri uri) : m_listener{std::move(uri)} {
+    m_listener.support(
+        web::http::methods::GET, [](web::http::http_request message) {
 
-using namespace web::http::experimental::listener;
-using namespace web::http;
-using namespace web;
-
-void handle_get(http_request message)
-{
-    
-    std::wcout << L"\ngot it\n";
-    message.reply(status_codes::OK, U("Hello, World!"));
-};
-
-void handle_post(http_request message)
-{
-    message.reply(status_codes::NotFound);
-};
-
-void handle_put(http_request message)
-{
-    message.reply(status_codes::NotFound);
-};
-
-void handle_delete(http_request message)
-{
-    message.reply(status_codes::NotFound);
-};
-
-#define TRACE(msg)            std::wcout << msg
-#define TRACE_ACTION(a, k, v) std::wcout << a << L" (" << k << L", " << v << L")\n"
-
-int main(int argc, char ** argv)
-{
-  uri_builder uri(U("http://127.0.0.1:61561"));
-  http_listener listener(uri.to_uri());
-
-  listener.support(methods::GET, handle_get);
-  listener.support(methods::POST, handle_post);
-  listener.support(methods::PUT, handle_put);
-  listener.support(methods::DEL, handle_delete);
-
-  try
-  {
-     listener
-        .open()
-        .then([&listener](){TRACE(L"\nstarting to listen\n");})
-       .wait();
-
-      while (true);
+          message.reply(web::http::status_codes::OK, "Hello world!")
+              .then([](pplx::task<void> t) {
+                try {
+                  t.get();
+                } catch (...) {
+                  //
+                }
+              });
+        });
   }
-  catch (std::exception const & e)
-  {
-     std::wcout << e.what() << std::endl;
+
+  pplx::task<void> open() { return m_listener.open(); }
+  pplx::task<void> close() { return m_listener.close(); }
+
+private:
+  web::http::experimental::listener::http_listener m_listener;
+};
+
+int main(int argc, char *argv[]) {
+  utility::string_t port = "8080";
+
+  if (argc == 2) {
+    port = argv[1];
   }
-  catch (...)
-  {
-     std::wcout << "Unknown exception" << std::endl;
-  }
+
+  utility::string_t address{"http://localhost:"};
+  address.append(port);
+
+  handler h(address);
+  h.open().wait();
+  std::cout << "Listening for requests at: " << address << std::endl;
+
+  std::cout << "Press ENTER to exit." << std::endl;
+  std::string line;
+  std::getline(std::cin, line);
+
+  h.close().wait();
 
   return 0;
 }
