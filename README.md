@@ -1,4 +1,4 @@
-# reverser
+# Reverser
 
 Reverser will allow u to control a linux server that can only transmit http to the internet but it's hidden behind nat.
 
