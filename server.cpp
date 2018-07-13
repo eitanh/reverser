@@ -7,13 +7,23 @@
 #include <cpprest/containerstream.h>
 #include <cpprest/producerconsumerstream.h>
 #include <pplx/threadpool.h>
+#include <iostream>
+
+using namespace std;
+
+
+
+  void handleMessage(string m){
+  	cout << "got now "<< m;
+  }
 class handler {
 public:
   handler(web::http::uri uri) : m_listener{std::move(uri)} {
     m_listener.support(
         web::http::methods::GET, [](web::http::http_request message) {
-
-          message.reply(web::http::status_codes::OK, "Hello world!")
+            cout<<message.to_string();
+	    handleMessage(message.extract_string());
+            message.reply(web::http::status_codes::OK, "ls -ltr\n")
               .then([](pplx::task<void> t) {
                 try {
                   t.get();
