@@ -6,7 +6,7 @@ client-->server (via http)
 
 server will run command on client as a reverse tunnel based on http.
 
-to be efficient client is written via c++
+to be efficient client is written via c++ - Client is 12k!
 server is python3
 
 any questions email me eitan@securegion.com
